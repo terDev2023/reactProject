@@ -1,0 +1,106 @@
+.modalWindow {
+    padding: 10px;
+
+    display: none;
+    flex-direction: column;
+    gap: 20px;
+
+    width: 30vw;
+    height: auto;
+    max-height: 50vh;
+
+    border: 1.5px solid black ;
+    box-shadow: 10px 10px 5px grey;
+
+    margin: auto;
+    position: absolute;
+    top: 0; left: 0; bottom: 0; right: 0;
+
+
+    z-index: 100;
+}
+
+.modalWindow.active {
+    display: flex;
+} 
+.modalWindow.active:nth-child(1) {
+    margin-bottom: 20px;
+} 
+
+.modalWindowActivator {
+    position: relative;
+    border: none;
+    z-index: 1;
+    width: 100px;
+    height: 30px;
+    color: black;
+    display: none;
+    transition: 0.5s;
+}
+
+.modalWindowActivator.active{
+    display: block;
+}
+
+.modalWindowActivator.active:hover{
+    width: 110px;
+    height: 34px;
+    background-color: grey;
+    color: white;
+}
+
+.cross{
+    display: flex;
+    justify-content: flex-end;
+    
+}
+
+.cross *{
+    transition: 0.2s;
+}
+
+.cross *:hover {
+    width: 25px;
+    height: 25px;
+    margin-bottom: -5px;
+}
+
+.btn {
+    border: 1px solid grey;
+    border-radius: 10px;
+    background-color: #fff;
+    color: #777;
+
+    padding: 5px;
+    margin-bottom: 2px;
+}
+
+.btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    color: black;
+
+    padding: 7px;
+    margin-bottom: -2px;
+}
+
+.btn:active {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}
+
+.login, .password {
+    outline: none;
+    border: black solid 1px;
+}
+
+.login:focus, .password:focus {
+    outline: none;
+}
+
+.login:invalid, .password:invalid {
+    border: red solid 3px;
+  }
+
+
+

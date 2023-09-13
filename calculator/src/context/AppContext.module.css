@@ -1,0 +1,11 @@
+.lastValueOfCalculator {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 60px;
+    height: auto;
+    display: flex;
+    flex-wrap: wrap;
+    border: 1px solid black;
+    background-color: white;
+}
