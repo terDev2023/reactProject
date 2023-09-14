@@ -30,7 +30,7 @@ const PageInput = (props: IProps) => {
         setValue('')
     }
 
-    useDebouns(value)
+    // useDebouns(value)
 
     const inputRef = useRef<HTMLInputElement | null>(null)
 
