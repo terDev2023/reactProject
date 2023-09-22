@@ -1,0 +1,61 @@
+.modalWindow {
+    position: relative;
+
+    padding: 10px;
+    padding-top: 20px;
+
+    flex-direction: column;
+    gap: 20px;
+
+    width: 30vw;
+    height: auto;
+    max-height: 50vh;
+
+    border: 1.5px solid black ;
+    box-shadow: 10px 10px 5px grey;
+    background-color: white;
+
+    margin: auto;
+    position: absolute;
+    top: 0; left: 0; bottom: 0; right: 0;
+
+    z-index: 100;
+}
+
+.modalWindowActivator {
+    border: none;
+    width: 100px;
+    height: 30px;
+    color: black;
+    transition: 0.2s;
+    margin: 0 8px;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.modalWindowActivator:hover{
+    background-color: grey;
+    color: white;
+    transform: scale(1.1);
+    box-shadow: none;
+}
+
+.cross{
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    justify-content: flex-end;
+    padding-right: 0;
+    border: none;
+    outline: none;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.cross:hover {
+    transition: 0.5s;
+    transform: scale(1.4);
+}
+
+
+

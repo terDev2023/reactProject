@@ -17,7 +17,7 @@ const Calculator = () => {
     handlerResetClick,
     handlerChange,
     handlerOpenCalculatorClick,
-    isMoreThenMillion,
+    isMoreThenMillion, 
     calculatorActive,
   } = calculator;
 

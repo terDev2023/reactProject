@@ -1,0 +1,33 @@
+.allTable{
+    border: 1px solid black;
+    width: max-content;
+    border-collapse: collapse;
+    padding: 20px;
+    margin: 20px;
+    margin-left: 0;
+}
+
+.buttons {
+    display: flex;
+    align-items: center;
+}
+
+.table {
+    width: 100%;
+}
+
+.th, .td {
+    border: 1px solid grey;
+    margin: 10px;
+ }
+
+.td {
+    text-align: center;
+    padding: 5px 10px;
+} 
+
+.idButton {
+    height: 110%;
+    margin: 10px auto;
+    align-items: center;
+}
