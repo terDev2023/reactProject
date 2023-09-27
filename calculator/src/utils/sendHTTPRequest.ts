@@ -11,10 +11,10 @@ interface IArgs {
 
 
 const  sendHttpRequest = async (args: IArgs ) => {
-    const {url, method, data, contentType} = args
+    const {url, method, data, contentType = 'application/json'} = args
 
     let req
-    if (method !== 'GET' && data && contentType){
+    if (method !== 'GET' && data){
         req = await fetch(url, {
         method: method,
         headers: { 'Content-Type': contentType },

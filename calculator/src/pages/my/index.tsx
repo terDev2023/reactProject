@@ -1,6 +1,7 @@
 import { PageInput } from '@/components/PageInput';
 import { BackPageButton } from '@/components/BackPageButtons';
-import { ModalWindow } from '@/components/ModalWindow';
+import { NewModalWindow } from '@/components/NewModalWindow/NewModalWindow';
+import { BasicTable } from '@/atoms/table/BasicTable';
  
 
   
@@ -9,8 +10,8 @@ export default function InputSecond() {
 
   return (
     <div>
-      <PageInput />
-      <ModalWindow />
+      <PageInput placeholder='Give me a text'/>
+      <BasicTable />
       <BackPageButton href='/mybuttons' /> 
     </div>
   )

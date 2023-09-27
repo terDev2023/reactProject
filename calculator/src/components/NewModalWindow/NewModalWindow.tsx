@@ -5,81 +5,70 @@ import { ModalActivator } from '@/atoms/ModalActivator';
 import { Input } from '@/atoms/Inputs/baseInput';
 import { ModalButton } from '@/atoms/ModalButton';
 import styles from './NewModalWindow.module.css';
-import sendHttpRequest from '@/utils/sendHTTPRequest';
-
-interface IUserArgs {
-  id?: number;
-  name: string;
-  age: number;
-}
 
 interface IProps {
   buttonText: string;
-  isEdit?: boolean;
-  userId?: number;
-  userName?: string;
-  userAge?: string;
-  onEditSubmit?: (args: IUserArgs) => void;
+  firstRowText?: string;
+  secondRowText?: string;
+  firstRowPlaceholder?: string;
+  secondRowPlaceholder?: string;
+  onSubmit: (args: Record<string, string>) => void;
+  onSubmitFirstRowChek?: (e: string) => boolean;
+  onSubmitSecondRowChek?: (e: string) => boolean;
 }
 
 export const NewModalWindow = (props: IProps) => {
-  const { buttonText, isEdit = false, userId = null, userName = '', userAge = '', onEditSubmit } = props;
+  const {
+    buttonText,
+    firstRowText = '',
+    secondRowText = '',
+    firstRowPlaceholder = '',
+    secondRowPlaceholder = '',
+    onSubmit,
+    onSubmitFirstRowChek = () => false,
+    onSubmitSecondRowChek = () => false,
+  } = props;
+  
   const isModalActive = useBool();
-  const hasNameAndAge = useBool();
+  const isRightFirstRow = useBool()
+  const isRightSecondRow = useBool()
 
-  const [name, setName] = useState(userName);
-  const [age, setAge] = useState(userAge);
+  const [firstRow, setFirstrow] = useState(firstRowText);
+  const [secondRow, setSecondRow] = useState(secondRowText);
 
   const handlerActivatorClick = useCallback(() => {
-    setName(userName);
-    setAge(userAge);
+    setFirstrow(firstRowText);
+    setSecondRow(secondRowText);
     isModalActive.onTrue();
-  }, [userName, userAge]);
+  }, [firstRowText, secondRowText]);
 
-  const handlerSubmit = async () => {
+  const handlerSubmit = () => {
     isModalActive.onFalse();
-    const body: IUserArgs = { name: name, age: Number(age) };
-    if (isEdit && typeof userId === 'number') {
-      const idOfeditUser = userId;
-      body.id = idOfeditUser;
-    }
-    if (!isEdit) {
-      await sendHttpRequest({
-        url: `http://localhost:8000/user`,
-        method: 'POST',
-        data: body,
-        contentType: 'application/json',
-      });
-    } else {
-      await sendHttpRequest({
-        url: `http://localhost:8000/user/${body.id}`,
-        method: 'PUT',
-        data: body,
-        contentType: 'application/json',
-      });
-      if (onEditSubmit) onEditSubmit({ id: Number(userId), name: name, age: Number(age) });
-    }
-    setName('');
-    setAge('');
+    onSubmit({ firstRow, secondRow });
+    setFirstrow('');
+    setSecondRow('');
   };
 
-  const handlerNameChange = useCallback((element: React.ChangeEvent<HTMLInputElement>) => {
-    const nameValue = element.target.value;
-    setName(nameValue);
+  const handlerFirstRowChange = useCallback((element: React.ChangeEvent<HTMLInputElement>) => {
+    const value = element.target.value;
+    setFirstrow(value);
   }, []);
-  const handlerAgeChange = useCallback((element: React.ChangeEvent<HTMLInputElement>) => {
-    const ageValue = element.target.value;
-    setAge(ageValue);
+  
+  const handlerSecondRowChange = useCallback((element: React.ChangeEvent<HTMLInputElement>) => {
+    const value = element.target.value as string;
+    setSecondRow(value);
   }, []);
 
   const handlerCrossClick = useCallback(() => {
     isModalActive.onFalse();
   }, []);
 
-  useEffect(() => {
-    if (name && Number(age) > 0) hasNameAndAge.onTrue();
-    else hasNameAndAge.onFalse();
-  }, [name, age]);
+  useEffect( () => {
+    if (onSubmitFirstRowChek(String(firstRow))) isRightFirstRow.onTrue()
+    else isRightFirstRow.onFalse() 
+    if (onSubmitSecondRowChek(String(secondRow))) isRightSecondRow.onTrue()
+    else isRightSecondRow.onFalse() 
+  }, [firstRow, secondRow])
 
   return (
     <div>
@@ -93,9 +82,14 @@ export const NewModalWindow = (props: IProps) => {
       {isModalActive.state && (
         <div className={styles.modalWindow}>
           <ModalButton className={styles.cross} img='/cross.svg' alt='cross' onClick={handlerCrossClick} />
-          <Input type='text' placeholder='Name' onChange={handlerNameChange} value={name} />
-          <Input type='text' placeholder='Age' onChange={handlerAgeChange} value={String(age)} />
-          <Button text={buttonText} onClick={handlerSubmit} disabled={!hasNameAndAge.state} />
+          <Input type='text' placeholder={firstRowPlaceholder} onChange={handlerFirstRowChange} value={firstRow} />
+          <Input
+            type='text'
+            placeholder={secondRowPlaceholder}
+            onChange={handlerSecondRowChange}
+            value={String(secondRow)}
+          />
+          <Button text={buttonText} onClick={handlerSubmit} disabled={!(isRightFirstRow.state && isRightSecondRow.state)} />
         </div>
       )}
     </div>

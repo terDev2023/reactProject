@@ -23,7 +23,7 @@ interface IProps {
    
     const {onChangeCalculatorValue} = useAppContext()
     const calculator  = useCalculator({getCalculatorValue: onChangeCalculatorValue});
-    const [valueCalculator, setValueCalculator] = useState('');
+    const [valueCalculator, setValueCalculator] = useState(' ');
   
     const handlerChangeValueCalculator = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
       setValueCalculator(e.target.value);

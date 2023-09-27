@@ -26,13 +26,11 @@ export default function MyApp({ Component, pageProps }: AppProps) {
     <AppContextProvider>
       <LoginFormContextProvider>
         <Component {...pageProps} />
-        <NewModalWindow buttonText='Set user'/>
         <div>
           {users.map((user) => {
             return <p key={user.id}>{user.name}, {user.age}</p>
           })}
         </div>
-        <BasicTable />
       </LoginFormContextProvider>
     </AppContextProvider>
 

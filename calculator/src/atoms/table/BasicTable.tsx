@@ -2,9 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTable } from 'react-table';
 import { COLUMNES } from './columns';
 import sendHttpRequest from '@/utils/sendHTTPRequest';
-import { Column } from 'react-table';
 import { Input } from '@/atoms/Inputs/baseInput';
-import { ModalActivator } from '../ModalActivator';
 import styles from './BasicTable.module.css';
 import { NewModalWindow } from '@/components/NewModalWindow/NewModalWindow';
 import { Button } from '../Button';
@@ -13,9 +11,15 @@ const urlforGet = (amountOfUsers: number, actualIndex: number = 0) => {
   return `http://localhost:8000/users?amountOfRows=${amountOfUsers}&index=${actualIndex}`;
 };
 
+interface IUserArgs {
+  id?: string;
+  name: string;
+  age: number;
+}
+
 export const BasicTable = () => {
   const amountOfusers: number = 5;
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<{ id: number; name: string; age: string }[]>([]);
   const [total, setTotal] = useState(0);
   const [index, setIndex] = useState(0);
   const [id, setId] = useState('');
@@ -35,7 +39,7 @@ export const BasicTable = () => {
   const amountOfPages = total % 5 === 0 ? total / 5 : Math.floor(total / 5) + 1;
   const pages = [...new Array(amountOfPages)].map((_, index) => index + 1);
 
-  const columns: Column<never>[] = useMemo(() => COLUMNES as never, []);
+  const columns = useMemo(() => COLUMNES as any, []);
   const data = useMemo(() => users, [users]);
 
   const tableInstance = useTable({
@@ -46,10 +50,22 @@ export const BasicTable = () => {
   const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = tableInstance;
 
   const handlerChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const reg = /^\d+$/;
+    const reg = /^\w+$/;
     const value = e.target.value;
     if (reg.test(value) || value === '') setId(value);
   }, []);
+
+  const handlerSubmitFirstRowChek = (e: string) => {
+    if (e !== '') {
+      return true;
+    } else return false;
+  };
+
+  const handlerSubmitSecondRowChek = (e: string) => {
+    if (Number(e) > 0) {
+      return true;
+    } else return false;
+  };
 
   const handlerIdButtonClick = useCallback(() => {
     const met = 'GET';
@@ -59,42 +75,97 @@ export const BasicTable = () => {
     });
   }, [id]);
 
-  const handlerDeleteUserClick = useCallback( async (actualID: number) => {
-    const met = 'DELETE';
-    const deletedID = (await sendHttpRequest({ url: `http://localhost:8000/user/${actualID}`, method: met })).result
-    setUsers( (prev) => {
-      const newArr =  prev.filter((n: any) => {
-        if (Number(n.id) !== Number(deletedID)) return n
-      })
-      console.log(newArr)
-      return newArr
-    })
-    // setTotal((prev) => prev - 1)
-    
-  }, [])
-
-  const handlerUpdateUser = useCallback((args: { id?: number; name: string; age: number }) => {
+  const handlerUpdateUser = useCallback((args: { id?: string; name: string; age: number }) => {
     const { id, name, age } = args;
-    console.log(id, name, age)
-    setUsers((prev) => {
+    setUsers(prev => {
       const editedUsers: any = prev.map((user: any) => {
-      if (Number(user.id) === Number(id)) {
-         return {
-          ...user,
-          name: name,
-          age: age,
-         }
+        if (user.id === id) {
+          return {
+            ...user,
+            name: name,
+            age: age,
+          };
         }
-        return user
+        return user;
       });
       return editedUsers;
     });
   }, []);
 
+  const handlerModalWindowSubmitForPost = async (args: IUserArgs) => {
+    const { name, age } = args;
+
+    const body = {
+      name: name,
+      age: Number(age),
+      amountOfusers: amountOfusers,
+      actualIndex: index,
+    };
+    const res = await sendHttpRequest({
+      url: `http://localhost:8000/user`,
+      method: 'POST',
+      data: body,
+      contentType: 'application/json',
+    });
+
+    if (res.status === 200) {
+      setUsers(res.result.finalRows);
+      setTotal(res.result.total);
+    }
+  };
+
+  const handlerModalWindowSubmitForPut = async (args: IUserArgs) => {
+    const { name, age, id } = args;
+    console.log(args);
+    const body: IUserArgs = { name: name, age: Number(age) };
+    if (typeof id === 'string') {
+      const idOfeditUser = id;
+      body.id = idOfeditUser;
+    }
+    const res = await sendHttpRequest({
+      url: `http://localhost:8000/user/${body.id}`,
+      method: 'PUT',
+      data: body,
+      contentType: 'application/json',
+    });
+    if (res.result !== 'There is no edited user') handlerUpdateUser({ id: String(id), name: name, age: Number(age) });
+  };
+
+  const handlerDeleteUserClick = useCallback(async (actualID: string) => {
+    const met = 'DELETE';
+    const ind = actualID;
+    const data = {
+      amountOfusers: amountOfusers,
+      actualId: ind,
+    };
+    const response = (
+      await sendHttpRequest({
+        url: `http://localhost:8000/user/${actualID}`,
+        method: met,
+        data: data,
+        contentType: 'application/json',
+      })
+    ).result;
+
+    setUsers(response.finalRows);
+    setTotal(response.total);
+  }, []);
+
   return (
     <div className={styles.allTable}>
+      <NewModalWindow
+        buttonText='Set user'
+        onSubmit={({ firstRow, secondRow }) =>
+          handlerModalWindowSubmitForPost({
+            name: firstRow,
+            age: Number(secondRow),
+          })
+        }
+        onSubmitFirstRowChek={handlerSubmitFirstRowChek}
+        onSubmitSecondRowChek={handlerSubmitSecondRowChek}
+      />
       <Input type='text' placeholder='Finde user by ID' onChange={handlerChange} value={id} />
-      <ModalActivator onClick={handlerIdButtonClick} className={styles.idButton} buttonText='Find user' />
+      <Button onClick={handlerIdButtonClick} text='Find user' />
       <table {...getTableProps()} className={styles.table}>
         <thead>
           {headerGroups.map(headerGroup => (
@@ -121,22 +192,31 @@ export const BasicTable = () => {
                   );
                 })}
                 <div className={styles.buttons}>
-                <NewModalWindow
-                  buttonText='Edit user'
-                  isEdit
-                  userId={Number((row.values as any).id as string)}
-                  userName={(row.values as any).name}
-                  userAge={(row.values as any).age}
-                  onEditSubmit={handlerUpdateUser}
-                />
-                <Button onClick={() => handlerDeleteUserClick(Number((row.values as any).id as string))} />
+                  <NewModalWindow
+                    buttonText='Edit user'
+                    firstRowText={(row.values as any).name}
+                    secondRowText={(row.values as any).age}
+                    onSubmit={({ firstRow, secondRow }) => {
+                      handlerModalWindowSubmitForPut({
+                        id: String((row.values as any).id) as string,
+                        name: firstRow,
+                        age: Number(secondRow),
+                      });
+                    }}
+                    onSubmitFirstRowChek={handlerSubmitFirstRowChek}
+                    onSubmitSecondRowChek={handlerSubmitSecondRowChek}
+                  />
+                  <Button
+                    onClick={() => handlerDeleteUserClick(String((row.values as any).id) as string)}
+                    text='Delete user'
+                  />
                 </div>
               </tr>
             );
           })}
         </tbody>
       </table>
-      {pages.map((_, index) => {
+      {pages.map((user, index) => {
         return (
           <button key={index + 1} onClick={() => handlerClickPage(index)}>
             {index + 1}
