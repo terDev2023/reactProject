@@ -9,7 +9,7 @@ const router = Router();
 router.post('/registration', [
     check('username', 'Имя пользователя должно быть непустым').notEmpty(),
     check('password', 'Пароль пользователя должен быть длиннее 4 символов').isLength({min: 4})
-],authController.registration)
+], authController.registration)
 
 router.post('/login', authController.login)
 router.get('/users', roleMiddleWare(['USER']), authController.getUsers)

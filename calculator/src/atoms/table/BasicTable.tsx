@@ -6,35 +6,39 @@ import { Input } from '@/atoms/Inputs/baseInput';
 import styles from './BasicTable.module.css';
 import { NewModalWindow } from '@/components/NewModalWindow/NewModalWindow';
 import { Button } from '../Button';
+import { ObjectId } from 'mongodb';
 
 const urlforGet = (amountOfUsers: number, actualIndex: number = 0) => {
   return `http://localhost:8000/users?amountOfRows=${amountOfUsers}&index=${actualIndex}`;
 };
 
 interface IUserArgs {
-  id?: string;
+  _id?: string;
   name: string;
   age: number;
 }
 
 export const BasicTable = () => {
   const amountOfusers: number = 5;
-  const [users, setUsers] = useState<{ id: number; name: string; age: string }[]>([]);
+  const [users, setUsers] = useState<IUserArgs[]>([]);
   const [total, setTotal] = useState(0);
   const [index, setIndex] = useState(0);
-  const [id, setId] = useState('');
+  const [_id, set_Id] = useState('');
+  const [quantityOfUsersBeforeThisPage, setQuantityOfUsersBeforeThisPage] = useState(index * amountOfusers);
 
-  const handlerClickPage = useCallback((index: number) => {
-    setIndex(index * amountOfusers);
+  const handlerClickPage = useCallback((indexOfPage: number) => {
+    setIndex(indexOfPage);
+    setQuantityOfUsersBeforeThisPage(indexOfPage * amountOfusers);
   }, []);
 
   useEffect(() => {
+    // console.log('количесто userов до :', quantityOfUsersBeforeThisPage)
     const met = 'GET';
-    sendHttpRequest({ url: urlforGet(amountOfusers, index), method: met }).then(res => {
+    sendHttpRequest({ url: urlforGet(amountOfusers, quantityOfUsersBeforeThisPage), method: met }).then(res => {
       setUsers(res.result.finalRows);
       setTotal(res.result.total);
     });
-  }, [index]);
+  }, [index, quantityOfUsersBeforeThisPage]);
 
   const amountOfPages = total % 5 === 0 ? total / 5 : Math.floor(total / 5) + 1;
   const pages = [...new Array(amountOfPages)].map((_, index) => index + 1);
@@ -52,7 +56,7 @@ export const BasicTable = () => {
   const handlerChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const reg = /^\w+$/;
     const value = e.target.value;
-    if (reg.test(value) || value === '') setId(value);
+    if (reg.test(value) || value === '') set_Id(value);
   }, []);
 
   const handlerSubmitFirstRowChek = (e: string) => {
@@ -69,17 +73,17 @@ export const BasicTable = () => {
 
   const handlerIdButtonClick = useCallback(() => {
     const met = 'GET';
-    sendHttpRequest({ url: `http://localhost:8000/user/${id}`, method: met }).then(res => {
+    sendHttpRequest({ url: `http://localhost:8000/user/${_id}`, method: met }).then(res => {
       if (res.result === 'There is no user with this ID') alert('There is no user with this ID');
       else alert(`Имя: ${res.result.name}, возраст: ${res.result.age}`);
     });
-  }, [id]);
+  }, [_id]);
 
-  const handlerUpdateUser = useCallback((args: { id?: string; name: string; age: number }) => {
-    const { id, name, age } = args;
+  const handlerUpdateUser = useCallback((args: { _id?: string; name: string; age: number }) => {
+    const { _id, name, age } = args;
     setUsers(prev => {
       const editedUsers: any = prev.map((user: any) => {
-        if (user.id === id) {
+        if (user._id === _id) {
           return {
             ...user,
             name: name,
@@ -92,64 +96,85 @@ export const BasicTable = () => {
     });
   }, []);
 
-  const handlerModalWindowSubmitForPost = async (args: IUserArgs) => {
-    const { name, age } = args;
+  const handlerModalWindowSubmitForPost = useCallback(
+    async (args: IUserArgs) => {
+      const { name, age } = args;
 
+      const body = {
+        name: name,
+        age: Number(age),
+      };
+      const res = await sendHttpRequest({
+        url: `http://localhost:8000/user`,
+        method: 'POST',
+        data: body,
+        contentType: 'application/json',
+      });
+
+      if (res.status === 200) {
+        if (users.length < amountOfusers) {
+          setUsers(prev => {
+            const newArr = [...prev];
+            newArr.push({ _id: res.result._id, name: name, age: age });
+            return newArr;
+          });
+        } else {
+          setQuantityOfUsersBeforeThisPage(Math.round(total / amountOfusers)* amountOfusers);
+          setIndex(Math.round(total / amountOfusers));
+        }
+      }
+    },
+    [users]
+  );
+
+  const handlerModalWindowSubmitForPut = useCallback(async (args: IUserArgs) => {
+    const { name, age, _id } = args;
+    // console.log(args);
     const body = {
+      _id: _id,
       name: name,
       age: Number(age),
-      amountOfusers: amountOfusers,
-      actualIndex: index,
     };
     const res = await sendHttpRequest({
-      url: `http://localhost:8000/user`,
-      method: 'POST',
-      data: body,
-      contentType: 'application/json',
-    });
-
-    if (res.status === 200) {
-      setUsers(res.result.finalRows);
-      setTotal(res.result.total);
-    }
-  };
-
-  const handlerModalWindowSubmitForPut = async (args: IUserArgs) => {
-    const { name, age, id } = args;
-    console.log(args);
-    const body: IUserArgs = { name: name, age: Number(age) };
-    if (typeof id === 'string') {
-      const idOfeditUser = id;
-      body.id = idOfeditUser;
-    }
-    const res = await sendHttpRequest({
-      url: `http://localhost:8000/user/${body.id}`,
+      url: `http://localhost:8000/user/${body._id}`,
       method: 'PUT',
       data: body,
       contentType: 'application/json',
     });
-    if (res.result !== 'There is no edited user') handlerUpdateUser({ id: String(id), name: name, age: Number(age) });
-  };
+    if (res.result !== 'There is no edited user') handlerUpdateUser({ _id: String(_id), name: name, age: Number(age) });
+  }, []);
 
-  const handlerDeleteUserClick = useCallback(async (actualID: string) => {
-    const met = 'DELETE';
-    const ind = actualID;
-    const data = {
-      amountOfusers: amountOfusers,
-      actualId: ind,
-    };
-    const response = (
-      await sendHttpRequest({
+  const handlerDeleteUserClick = useCallback(
+    async (actualID: string) => {
+      const met = 'DELETE';
+      
+      const response = await sendHttpRequest({
         url: `http://localhost:8000/user/${actualID}`,
         method: met,
-        data: data,
         contentType: 'application/json',
-      })
-    ).result;
+      });
 
-    setUsers(response.finalRows);
-    setTotal(response.total);
-  }, []);
+      setTotal(response.result.total)
+
+      if (response.status === 200) {
+        if (users.length === 1) {
+          setUsers( () => {
+            const newArr: IUserArgs[] = [];
+            return newArr;
+          });
+          setQuantityOfUsersBeforeThisPage(prev => prev = Math.round((total- amountOfusers) / amountOfusers)* amountOfusers);
+          setIndex(prev => prev = Math.round(total / 5));
+
+        } else {
+          setUsers(prev => {
+            const newUsers: IUserArgs[] = [];
+            prev.map(user => {
+              if (String(user._id) !== actualID) newUsers.push(user);
+            });
+            return newUsers;
+          });
+        }}
+    }, [users]);
 
   return (
     <div className={styles.allTable}>
@@ -164,12 +189,12 @@ export const BasicTable = () => {
         onSubmitFirstRowChek={handlerSubmitFirstRowChek}
         onSubmitSecondRowChek={handlerSubmitSecondRowChek}
       />
-      <Input type='text' placeholder='Finde user by ID' onChange={handlerChange} value={id} />
+      <Input type='text' placeholder='Finde user by ID' onChange={handlerChange} value={_id} />
       <Button onClick={handlerIdButtonClick} text='Find user' />
       <table {...getTableProps()} className={styles.table}>
         <thead>
           {headerGroups.map(headerGroup => (
-            <tr {...headerGroup.getHeaderGroupProps()} className={styles.th}>
+            <tr {...headerGroup.getHeaderGroupProps()}>
               {headerGroup.headers.map(column => (
                 <th {...column.getHeaderProps()} className={styles.th}>
                   {' '}
@@ -198,7 +223,7 @@ export const BasicTable = () => {
                     secondRowText={(row.values as any).age}
                     onSubmit={({ firstRow, secondRow }) => {
                       handlerModalWindowSubmitForPut({
-                        id: String((row.values as any).id) as string,
+                        _id: String((row.values as any)._id) as string,
                         name: firstRow,
                         age: Number(secondRow),
                       });
@@ -207,7 +232,7 @@ export const BasicTable = () => {
                     onSubmitSecondRowChek={handlerSubmitSecondRowChek}
                   />
                   <Button
-                    onClick={() => handlerDeleteUserClick(String((row.values as any).id) as string)}
+                    onClick={() => handlerDeleteUserClick(String((row.values as any)._id) as string)}
                     text='Delete user'
                   />
                 </div>
@@ -216,10 +241,14 @@ export const BasicTable = () => {
           })}
         </tbody>
       </table>
-      {pages.map((user, index) => {
+      {pages.map((user, ind) => {
         return (
-          <button key={index + 1} onClick={() => handlerClickPage(index)}>
-            {index + 1}
+          <button
+            key={ind + 1}
+            onClick={() => handlerClickPage(ind)}
+            className={ind === index ? `${styles.button} ${styles.active}` : `${styles.button}`}
+          >
+            {ind + 1}
           </button>
         );
       })}

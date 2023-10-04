@@ -9,7 +9,7 @@
 
 .buttons {
     display: flex;
-    align-items: center;
+    margin: auto 10px;
 }
 
 .table {
@@ -19,6 +19,7 @@
 .th, .td {
     border: 1px solid grey;
     margin: 10px;
+    height: auto;
  }
 
 .td {
@@ -29,5 +30,13 @@
 .idButton {
     height: 110%;
     margin: 10px auto;
+    display: flex;
     align-items: center;
+}
+
+.button.active{
+    border: 2px solid black;
+    background-color: white;
+    color: black;
+    font-weight: bold;
 }

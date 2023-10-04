@@ -2,15 +2,20 @@ import express, { Express, Request, Response, Application, response, query } fro
 import os from 'os';
 import fs from 'fs';
 import cors from 'cors';
-import mongoose from 'mongoose';
+import conectToMongoose from './config/mongoose';
 import router from './Routs/authRouts';
+import getUsers from './services/users/getUsers';
+import createUser from './services/users/createUsers';
+import getUserById from './services/users/getUserById';
+import updateUser from './services/users/updateUser';
+import deleteUser from './services/users/deleteUser';
 
 const app: Application = express();
 const port = process.env.PORT || 8000;
 
 const start = async () => {
   try {
-    await mongoose.connect(`mongodb+srv://terntysemenov:Quality-2023@test-project.3cwpmcj.mongodb.net/`);
+    await conectToMongoose()
     app.listen(port, () => {
       console.log(`Server is Fire at http://localhost:${port}`);
     });
@@ -49,145 +54,69 @@ app.get('/status', (req: Request, res: Response) => {
   res.send(statusStr);
 });
 
-interface IArgs {
-  amountOfRows?: number;
-  id?: string;
-  ind?: number;
-  arr: any[];
-}
-
-const getNumRows = (args: IArgs) => {
-  const { amountOfRows = 5, id, ind, arr } = args;
-  let index;
-  let end;
-
-  if (id) {
-    console.log('есть id: ', id)
-    let index = arr.findIndex(e => {
-      if (String(e.id) === String(id)) return true;
-      else return false;
-    });
-    const numOfIndexOnPage = index % amountOfRows
-
-    index = index - numOfIndexOnPage
-    end = index + amountOfRows
-    return arr.slice(index, end);
-  }
-  else if (!id && ind){
-    console.log('Есть индекс')
-    index = ind
-    end = index + amountOfRows 
-    return arr.slice(index, end);
-  } 
-  else {
-    console.log('сюда зашло')
-    index = 0
-    end = index + amountOfRows
-    return arr.slice(index, end);
-  }
-};
-
-app.get('/users', (req: Request, res: Response) => {
+app.get('/users', async (req: Request, res: Response) => {
   const amountOfRows = req.query.amountOfRows as string;
   let index = req.query.index as string;
 
-  const finalRows = getNumRows({ amountOfRows: Number(amountOfRows), ind: Number(index), arr: users });
+  const finalRows = await getUsers({amountOfRows: Number(amountOfRows), numberOfStartScip: Number(index)})
+
+  // console.log(finalRows.users)
 
   res
     .json({
-      finalRows: finalRows,
-      total: users.length,
+      finalRows: finalRows.users,
+      total: finalRows.total
     })
     .status(200);
 });
 
-app.get('/user/:id', (req: Request, res: Response) => {
+app.get('/user/:id', async (req: Request, res: Response) => {
   const id = req.params.id;
-  const user = users.find(user => {
-    if (user.id === id) {
-      return true;
-    } else {
-      return false;
-    }
-  });
-  if (!user) res.json('There is no user with this ID');
-  else res.json(user);
+
+  try{
+    const user = await getUserById(id)
+    res.json(user);
+  } catch ( err ) {
+    res.json('There is no user with this ID')
+  }
 });
 
-app.post('/user', (req: Request, res: Response) => {
+app.post('/user', async(req: Request, res: Response) => {
 
   const body = req.body;
-  const newId = Math.random().toString(36).substring(2)
 
-  const newBody = {
-    id: newId,
-    name: body.name,
-    age: Number(body.age),
-  };
+  const id = await createUser(body)
 
-  users.push(newBody);
-
-
-  const amountOfRows = body.amountOfusers as string;
-  let index = body.actualIndex as string;
-
-
-  const finalRows = getNumRows({ amountOfRows: Number(amountOfRows), ind: Number(index), arr: users });
-
-  const data = {
-    finalRows: finalRows,
-    total: users.length,
-  };
-  console.log(data.finalRows);
-  res.json(data).status(200);
+  res.json(id).status(200);
 });
 
-app.put('/user/:id', (req: Request, res: Response) => {
+app.put('/user/:id', async (req: Request, res: Response) => {
   const userId = req.params.id as string;
-  const editedUser = users.find(user => {
-    if (userId === user.id) {
-      return true;
-    } else {
-      return false;
-    }
-  });
+  
   const editedUserBody = req.body;
-  if (editedUser) {
-    editedUser.name = editedUserBody.name;
-    editedUser.age = editedUserBody.age;
+
+  const body = {
+    _id: userId,
+    name: editedUserBody.name,
+    age: editedUserBody.age
   }
-  if (!editedUserBody) res.json('There is no edited user');
-  else res.json(editedUserBody);
+  try {
+    await updateUser(body)
+    res.json('success')
+  } catch (err) {
+    res.json('There is no edited user');
+  }
 });
 
-app.delete('/user/:id', (req: Request, res: Response) => {
+app.delete('/user/:id', async (req: Request, res: Response) => {
+
   const userId = req.params.id as string;
-  const amountOfRows = req.body.amountOfusers as string;
-
-  const deletedUserIndex = users.findIndex(user => {
-    if (userId === user.id) {
-      return true;
-    } else return false;
-  });
-
-  if (deletedUserIndex !== -1) {
-    users.splice(deletedUserIndex, 1);
-  } else res.json('There is no deleted user');
-
-  const actualID = deletedUserIndex !== 0 ? users[deletedUserIndex - 1].id : users[deletedUserIndex].id
-
-  let finalRows
-
-  if (users.length === 0) finalRows = []
-
-  else finalRows = getNumRows({ amountOfRows: Number(amountOfRows), id: actualID, arr: users });
-
-
-  const data = {
-    finalRows: finalRows,
-    total: users.length,
-  };
-  res.json(data).status(200);
+  try {
+    const total = await deleteUser(userId);
+    res.json(total).status(200);
+  } catch (err) {
+    res.json('There is no deleted user');
+  }
 });
 
 start();

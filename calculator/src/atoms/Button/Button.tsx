@@ -14,7 +14,7 @@ const Button = (props: IProps) => {
     const handlerClick = () => {
         if (onClick) onClick()
         if (textConsole) console.log(textConsole)
-        else console.log('default')
+        else return true
     }
 
     const buttonActiveClass = useMemo(() => {

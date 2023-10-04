@@ -13,6 +13,6 @@ export default function InputSecond() {
       <PageInput placeholder='Give me a text'/>
       <BasicTable />
       <BackPageButton href='/mybuttons' /> 
-    </div>
+    </div> 
   )
 }

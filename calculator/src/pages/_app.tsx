@@ -13,24 +13,19 @@ interface IUser {
 }
 
 export default function MyApp({ Component, pageProps }: AppProps) {
-  const url = 'http://localhost:8000/users';
+  // const url = 'http://localhost:8000/users';
 
-  const  [users, setUsers] = useState<IUser[]>([])
-   useEffect(() => {
-    const met = 'GET'
-    const users = sendHttpRequest({url, method: met}).then((res) => {
-      setUsers(res.result.finalRows)
-    })
-  }, []);
+  // const  [users, setUsers] = useState<IUser[]>([])
+  //  useEffect(() => {
+  //   const met = 'GET'
+  //   const users = sendHttpRequest({url, method: met}).then((res) => {
+  //     setUsers(res.result.finalRows)
+  //   })
+  // }, []);
   return (
     <AppContextProvider>
       <LoginFormContextProvider>
         <Component {...pageProps} />
-        <div>
-          {users.map((user) => {
-            return <p key={user.id}>{user.name}, {user.age}</p>
-          })}
-        </div>
       </LoginFormContextProvider>
     </AppContextProvider>
 

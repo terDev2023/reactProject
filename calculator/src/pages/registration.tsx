@@ -6,7 +6,6 @@ import sendHttpRequest from '@/utils/sendHTTPRequest';
 const Registration = () => {
 
     const handlerCheck = (e: string) => {
-        console.log(e !== '')
         if (e !== '') return true
         else return false
     }

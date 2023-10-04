@@ -1,3 +1,4 @@
+
 type Method = 'GET' | 'POST' | 'PUT' | 'DELETE'
 
 
@@ -13,7 +14,7 @@ interface IArgs {
 const  sendHttpRequest = async (args: IArgs ) => {
     const {url, method, data, contentType = 'application/json'} = args
 
-    let req
+    let req;
     if (method !== 'GET' && data){
         req = await fetch(url, {
         method: method,
