@@ -1,18 +1,15 @@
 import { PageInput } from '@/components/PageInput';
 import { BackPageButton } from '@/components/BackPageButtons';
-import { NewModalWindow } from '@/components/NewModalWindow/NewModalWindow';
+import { AuthLayout } from '@/layouts/AuthLayout';
 import { BasicTable } from '@/atoms/table/BasicTable';
- 
-
   
 
-export default function InputSecond() {
-
+export default function MyPage() {
   return (
-    <div>
-      <PageInput placeholder='Give me a text'/>
-      <BasicTable />
-      <BackPageButton href='/mybuttons' /> 
-    </div> 
-  )
+      <AuthLayout>
+        <PageInput placeholder='Give me a text' />
+        <BasicTable />
+        <BackPageButton href='/mybuttons' />
+      </AuthLayout>
+  );
 }

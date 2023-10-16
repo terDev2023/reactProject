@@ -1,5 +1,5 @@
 import { Router } from "express";
-import authController from "../authController";
+import authController from "../middleWare/authController";
 import {check} from 'express-validator'
 import authMiddleWare from "../middleWare/roleMiddleWare";
 import roleMiddleWare from "../middleWare/roleMiddleWare";

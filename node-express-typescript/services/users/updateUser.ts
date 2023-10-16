@@ -11,6 +11,7 @@ const updateUser = async (args: IUpdateUsersArgs) => {
     const {_id, name, age} = args
 
     await User.findByIdAndUpdate( {_id:_id}, {name: name}, {age: age})
+    return true
 }
 
 export default updateUser

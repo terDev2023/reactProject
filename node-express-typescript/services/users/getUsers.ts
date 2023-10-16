@@ -7,8 +7,14 @@ interface IGetUsersArgs {
 
 const getUsers =  async (args: IGetUsersArgs) => {
     const { amountOfRows, numberOfStartScip = 0} = args
-    const users = await User.find().skip(numberOfStartScip).limit(amountOfRows)
-    const total = await User.count()
+    let users
+    let total
+    try{
+        users = await User.find().skip(numberOfStartScip).limit(amountOfRows)
+        total = await User.count()
+    } catch ( err ){
+        return false
+    }
     // console.log(users)
     return { 
         users,

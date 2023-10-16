@@ -6,7 +6,6 @@ import { Input } from '@/atoms/Inputs/baseInput';
 import styles from './BasicTable.module.css';
 import { NewModalWindow } from '@/components/NewModalWindow/NewModalWindow';
 import { Button } from '../Button';
-import { ObjectId } from 'mongodb';
 
 const urlforGet = (amountOfUsers: number, actualIndex: number = 0) => {
   return `http://localhost:8000/users?amountOfRows=${amountOfUsers}&index=${actualIndex}`;
@@ -17,6 +16,14 @@ interface IUserArgs {
   name: string;
   age: number;
 }
+
+interface IUsersGetArgs {
+  amountOfusers: number;
+  quantityOfUsersBeforeThisPage: number;
+  met: Method;
+}
+
+type Method = 'GET' | 'POST' | 'PUT' | 'DELETE'
 
 export const BasicTable = () => {
   const amountOfusers: number = 5;
@@ -31,14 +38,22 @@ export const BasicTable = () => {
     setQuantityOfUsersBeforeThisPage(indexOfPage * amountOfusers);
   }, []);
 
+  const getUsers = useCallback((args: IUsersGetArgs) => {
+    const {amountOfusers, quantityOfUsersBeforeThisPage, met} = args
+    sendHttpRequest({ url: urlforGet(amountOfusers, quantityOfUsersBeforeThisPage), method: met }).then(res => {
+      if (!res.result.err) {
+        setUsers(res.result.finalRows);
+        setTotal(res.result.total);
+      }
+    });
+  }, []);
+
   useEffect(() => {
     // console.log('количесто userов до :', quantityOfUsersBeforeThisPage)
     const met = 'GET';
-    sendHttpRequest({ url: urlforGet(amountOfusers, quantityOfUsersBeforeThisPage), method: met }).then(res => {
-      setUsers(res.result.finalRows);
-      setTotal(res.result.total);
-    });
-  }, [index, quantityOfUsersBeforeThisPage]);
+
+    getUsers({amountOfusers: amountOfusers, quantityOfUsersBeforeThisPage: quantityOfUsersBeforeThisPage, met: met})
+  }, []);
 
   const amountOfPages = total % 5 === 0 ? total / 5 : Math.floor(total / 5) + 1;
   const pages = [...new Array(amountOfPages)].map((_, index) => index + 1);
@@ -100,16 +115,21 @@ export const BasicTable = () => {
     async (args: IUserArgs) => {
       const { name, age } = args;
 
+      console.log(name, age)
+
       const body = {
         name: name,
         age: Number(age),
       };
+      console.log(body)
       const res = await sendHttpRequest({
         url: `http://localhost:8000/user`,
         method: 'POST',
         data: body,
         contentType: 'application/json',
       });
+
+      // if (res.status === 400) alert(res.result.message)
 
       if (res.status === 200) {
         if (users.length < amountOfusers) {
@@ -119,7 +139,7 @@ export const BasicTable = () => {
             return newArr;
           });
         } else {
-          setQuantityOfUsersBeforeThisPage(Math.round(total / amountOfusers)* amountOfusers);
+          setQuantityOfUsersBeforeThisPage(Math.round(total / amountOfusers) * amountOfusers);
           setIndex(Math.round(total / amountOfusers));
         }
       }
@@ -147,24 +167,25 @@ export const BasicTable = () => {
   const handlerDeleteUserClick = useCallback(
     async (actualID: string) => {
       const met = 'DELETE';
-      
+
       const response = await sendHttpRequest({
         url: `http://localhost:8000/user/${actualID}`,
         method: met,
         contentType: 'application/json',
       });
 
-      setTotal(response.result.total)
+      setTotal(response.result.total);
 
       if (response.status === 200) {
         if (users.length === 1) {
-          setUsers( () => {
+          setUsers(() => {
             const newArr: IUserArgs[] = [];
             return newArr;
           });
-          setQuantityOfUsersBeforeThisPage(prev => prev = Math.round((total- amountOfusers) / amountOfusers)* amountOfusers);
-          setIndex(prev => prev = Math.round(total / 5));
-
+          setQuantityOfUsersBeforeThisPage(
+            prev => (prev = Math.round((total - amountOfusers) / amountOfusers) * amountOfusers)
+          );
+          setIndex(prev => (prev = Math.round(total / 5)));
         } else {
           setUsers(prev => {
             const newUsers: IUserArgs[] = [];
@@ -173,8 +194,11 @@ export const BasicTable = () => {
             });
             return newUsers;
           });
-        }}
-    }, [users]);
+        }
+      }
+    },
+    [users]
+  );
 
   return (
     <div className={styles.allTable}>

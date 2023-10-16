@@ -2,14 +2,12 @@ import { useState, useEffect } from 'react';
 import type { AppProps } from 'next/app';
 import { LoginFormContextProvider } from '../context/LoginFormContext';
 import { AppContextProvider } from '@/context/AppConext';
-import sendHttpRequest from '@/utils/sendHTTPRequest';
-import { BasicTable } from '@/atoms/table/BasicTable';
-import { NewModalWindow } from '@/components/NewModalWindow/NewModalWindow';
+import { UserContextProvider } from '@/context/UserContext';
 
 interface IUser {
-  id: number,
-  name: string,
-  age: number
+  id: number;
+  name: string;
+  age: number;
 }
 
 export default function MyApp({ Component, pageProps }: AppProps) {
@@ -22,12 +20,14 @@ export default function MyApp({ Component, pageProps }: AppProps) {
   //     setUsers(res.result.finalRows)
   //   })
   // }, []);
+
   return (
     <AppContextProvider>
-      <LoginFormContextProvider>
-        <Component {...pageProps} />
-      </LoginFormContextProvider>
+      <UserContextProvider>
+        <LoginFormContextProvider>
+          <Component {...pageProps} />
+        </LoginFormContextProvider>
+      </UserContextProvider>
     </AppContextProvider>
-
   );
 }

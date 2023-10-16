@@ -18,13 +18,16 @@ const  sendHttpRequest = async (args: IArgs ) => {
     if (method !== 'GET' && data){
         req = await fetch(url, {
         method: method,
-        headers: { 'Content-Type': contentType },
-        body: JSON.stringify(data)
+        headers: { 'Content-Type': contentType, 'Control-Allow-Origin': '*' },
+        body: JSON.stringify(data),
+        credentials: 'include',
     })
     }
     else {
         req = await fetch(url, {
+            headers: { 'Content-Type': contentType, 'Control-Allow-Origin': '*' },
             method: method,
+            credentials: 'include',
         }) 
     }
     

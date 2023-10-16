@@ -2,11 +2,11 @@ import mongoose from "mongoose";
 import { Schema, model } from "mongoose";
 
 const userSchema = new Schema({
-    // username: {type: String, unique: true, require: true},
-    // password: {type: String, require: true},
+    username: {type: String, unique: true, require: true},
+    password: {type: String, require: true},
     name: {type: String, require: true},
     age: {type: Number, require: true},
-    // roles: [{type: String, ref: 'Role'}]
+    roles: [{type: String, ref: 'Role'}]
 })
 
 const User = mongoose.model('User', userSchema)

@@ -2,8 +2,12 @@ import { NewModalWindow } from '@/components/NewModalWindow/NewModalWindow';
 import React, { useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import sendHttpRequest from '@/utils/sendHTTPRequest';
+import { USER_LOGIN } from '@/const/ApiUrls';
+import { TABLE_URL } from '@/const/clientUrls';
 
-const Registration = () => {
+const Login = () => {
+
+  const router = useRouter()
 
     const handlerCheck = (e: string) => {
         if (e !== '') return true
@@ -15,13 +19,15 @@ const Registration = () => {
         username: login,
         password: password
     }
-    const responce = await sendHttpRequest({ url: `http://localhost:8000/auth/registration`, method: 'POST', data: data});
-    console.log(responce.result)
+    const responce = await sendHttpRequest({ url: USER_LOGIN, method: 'POST', data: data});
+    if (responce.status === 200) {
+      router.push(TABLE_URL)
+    } 
   };
   return (
     <>
       <NewModalWindow
-        buttonText='Sign up'
+        buttonText='Log in'
         onSubmit={({ firstRow, secondRow }) => handlerSubmit({ login: firstRow, password: secondRow })}
         firstRowPlaceholder='Login'
         secondRowPlaceholder='Password'
@@ -32,4 +38,4 @@ const Registration = () => {
   );
 };
 
-export default Registration;
+export default Login;
